@@ -21,12 +21,16 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const savedUser = authStorage.getUser();
+
     if (savedUser) {
       setUser(savedUser);
     }
+
+    setIsLoading(false);
   }, []);
 
   const login = async (payload: LoginPayload) => {
@@ -52,11 +56,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     () => ({
       user,
       isAuthenticated: Boolean(user),
+      isLoading,
       login,
       register,
       logout,
     }),
-    [user]
+    [user, isLoading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

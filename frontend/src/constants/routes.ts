@@ -9,5 +9,6 @@ export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
   ADMIN: '/admin',
+  ASSISTANT: '/assistant',
   UNAUTHORIZED: '/unauthorized',
 } as const;

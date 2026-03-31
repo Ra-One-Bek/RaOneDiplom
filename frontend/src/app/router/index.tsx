@@ -16,6 +16,7 @@ import NotFoundPage from '../../pages/NotFoundPage/NotFoundPage';
 
 import ProtectedRoute from '../../features/auth/ProtectedRoute';
 import AdminRoute from '../../features/auth/AdminRoute';
+import AssistantPage from '../../pages/AssistantPage/AssistantPage';
 
 export const router = createBrowserRouter([
   {
@@ -67,6 +68,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <ProfilePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.ASSISTANT,
+    element: (
+      <ProtectedRoute>
+        <AssistantPage />
       </ProtectedRoute>
     ),
   },
