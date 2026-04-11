@@ -168,7 +168,7 @@ const FittingRoomPage = () => {
 
               {wardrobe.length > 0 && (
                 <>
-                  <div className="space-y-4">
+                  <div className="space-y-2 grid grid-cols-3 gap-5">
                     {wardrobe.map((product) => {
                       const slot = getProductSlot(product);
                       const isEquipped = outfit[slot]?.id === product.id;
@@ -178,9 +178,16 @@ const FittingRoomPage = () => {
                           key={product.id}
                           draggable
                           onDragStart={() => handleDragStart(product)}
-                          className="cursor-grab rounded-2xl border border-neutral-200 p-4 active:cursor-grabbing"
+                          className="cursor-grab rounded-2xl border border-neutral-200 px-4 active:cursor-grabbing"
                         >
-                          <div className="mb-3 flex items-center justify-between gap-3">
+                          <div className="mb-3 grid items-center justify-between gap-2">
+                            <button
+                              onClick={() => handleRemoveFromWardrobe(product.id)}
+                              className="text-sm font-light text-red-500 transition hover:text-red-600"
+                            >
+                              X
+                            </button>
+
                             <div className="flex items-center gap-2">
                               <span className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-semibold text-neutral-700">
                                 {getSlotLabel(slot)}
@@ -193,19 +200,14 @@ const FittingRoomPage = () => {
                               )}
                             </div>
 
-                            <button
-                              onClick={() => handleRemoveFromWardrobe(product.id)}
-                              className="text-sm font-medium text-red-500 transition hover:text-red-600"
-                            >
-                              Убрать
-                            </button>
+                            
                           </div>
 
                           <div className="mb-3 overflow-hidden rounded-2xl bg-neutral-100">
                             <img
                               src={product.image}
                               alt={product.title}
-                              className="h-[140px] w-full object-cover"
+                              className="h-[80px] w-full object-cover"
                             />
                           </div>
 
@@ -213,17 +215,10 @@ const FittingRoomPage = () => {
                             {product.title}
                           </h3>
 
-                          <p className="mb-3 text-sm leading-6 text-neutral-600">
-                            {product.description}
-                          </p>
-
                           <p className="mb-2 font-bold text-neutral-900">
                             {formatPrice(product.price)}
                           </p>
-
-                          <p className="text-xs text-neutral-500">
-                            Перетащи карточку на соответствующую зону аватара
-                          </p>
+                          
                         </div>
                       );
                     })}
