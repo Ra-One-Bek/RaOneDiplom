@@ -9,10 +9,13 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import { selectedProductStorage } from '../../services/storage/selectedProductStorage';
 import { ROUTES } from '../../constants/routes';
+import { useAuth } from '../../hooks/useAuth';
+
 
 const ProductPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const product = useMemo(() => {
     return mockProducts.find((p) => p.id === Number(id));
@@ -32,6 +35,19 @@ const ProductPage = () => {
       </>
     );
   }
+
+  const handleAddToFittingRoom = () => {
+    if (!product) return;
+
+    selectedProductStorage.addToWardrobe(product);
+
+    if (!user?.avatarConfigured) {
+      navigate(ROUTES.AVATAR_SETUP);
+      return;
+    }
+
+    navigate(ROUTES.FITTING_ROOM);
+  };
 
   const handleTryOn = () => {
     selectedProductStorage.addToWardrobe(product);
@@ -140,6 +156,10 @@ const ProductPage = () => {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Button fullWidth onClick={handleTryOn}>
                   В примерочную
+                </Button>
+
+                <Button onClick={handleAddToFittingRoom}>
+                  Добавить в примерочную
                 </Button>
 
                 <Button

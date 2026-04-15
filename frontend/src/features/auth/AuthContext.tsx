@@ -5,7 +5,12 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import type { AuthUser, LoginPayload, RegisterPayload } from '../../types/auth';
+import type {
+  AuthUser,
+  AvatarProfile,
+  LoginPayload,
+  RegisterPayload,
+} from '../../types/auth';
 import type { AuthContextValue } from './auth.types';
 import { authStorage } from '../../services/storage/authStorage';
 import {
@@ -35,16 +40,29 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const login = async (payload: LoginPayload) => {
     const mockUser = createMockUserFromLogin(payload);
-
     setUser(mockUser);
     authStorage.setUser(mockUser);
   };
 
   const register = async (payload: RegisterPayload) => {
     const mockUser = createMockUserFromRegister(payload);
-
     setUser(mockUser);
     authStorage.setUser(mockUser);
+  };
+
+  const updateAvatar = (avatarProfile: AvatarProfile) => {
+    setUser((prevUser) => {
+      if (!prevUser) return prevUser;
+
+      const nextUser: AuthUser = {
+        ...prevUser,
+        avatarConfigured: true,
+        avatarProfile,
+      };
+
+      authStorage.setUser(nextUser);
+      return nextUser;
+    });
   };
 
   const logout = () => {
@@ -59,6 +77,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       isLoading,
       login,
       register,
+      updateAvatar,
       logout,
     }),
     [user, isLoading]

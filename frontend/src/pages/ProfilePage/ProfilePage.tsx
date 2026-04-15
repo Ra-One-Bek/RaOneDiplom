@@ -4,6 +4,8 @@ import PageContainer from '../../components/layout/PageContainer';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { useAuth } from '../../hooks/useAuth';
+import { Link } from 'react-router-dom';
+import { ROUTES } from '../../constants/routes';
 
 const ProfilePage = () => {
   const { user, logout } = useAuth();
@@ -36,10 +38,13 @@ const ProfilePage = () => {
               </div>
             </div>
 
-            <p className="mb-6 leading-7 text-neutral-600">
-              Позже здесь будет настройка профиля, управление параметрами аватара
-              и история сохраненных образов.
-            </p>
+            <Link to={ROUTES.AVATAR_SETUP}>
+              <Button variant="secondary">
+                {user?.avatarConfigured ? 'Изменить аватар' : 'Создать аватар'}
+              </Button>
+            </Link>
+
+            
 
             <Button variant="danger" onClick={logout}>
               Выйти из аккаунта

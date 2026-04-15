@@ -1,5 +1,5 @@
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Float, Html, MeshReflectorMaterial, Text } from "@react-three/drei";
+import { Float, MeshReflectorMaterial, Text } from "@react-three/drei";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import Header from "../../components/layout/Header";

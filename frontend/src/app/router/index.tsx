@@ -13,10 +13,11 @@ import ProfilePage from '../../pages/ProfilePage/ProfilePage';
 import AdminPage from '../../pages/AdminPage/AdminPage';
 import UnauthorizedPage from '../../pages/UnauthorizedPage/UnauthorizedPage';
 import NotFoundPage from '../../pages/NotFoundPage/NotFoundPage';
+import AssistantPage from '../../pages/AssistantPage/AssistantPage';
+import AvatarSetupPage from '../../pages/AvatarSetupPage/AvatarSetupPage';
 
 import ProtectedRoute from '../../features/auth/ProtectedRoute';
 import AdminRoute from '../../features/auth/AdminRoute';
-import AssistantPage from '../../pages/AssistantPage/AssistantPage';
 
 export const router = createBrowserRouter([
   {
@@ -33,11 +34,7 @@ export const router = createBrowserRouter([
   },
   {
     path: ROUTES.PRODUCT,
-    element: (
-      <ProtectedRoute>
-        <ProductPage />
-      </ProtectedRoute>
-    ),
+    element: <ProductPage />,
   },
   {
     path: ROUTES.FITTING_ROOM,
@@ -62,6 +59,14 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.REGISTER,
     element: <RegisterPage />,
+  },
+  {
+    path: ROUTES.AVATAR_SETUP,
+    element: (
+      <ProtectedRoute>
+        <AvatarSetupPage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: ROUTES.PROFILE,

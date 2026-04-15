@@ -8,6 +8,7 @@ export const ROUTES = {
   PROFILE: '/profile',
   LOGIN: '/login',
   REGISTER: '/register',
+  AVATAR_SETUP: '/avatar-setup',
   ADMIN: '/admin',
   ASSISTANT: '/assistant',
   UNAUTHORIZED: '/unauthorized',

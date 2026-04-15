@@ -1,42 +1,41 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
-import { cn } from '../../utils/cn';
-
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger';
+import clsx from 'clsx';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
-  variant?: ButtonVariant;
   fullWidth?: boolean;
+  variant?: 'primary' | 'secondary' | 'outline' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
 }
-
-const variantClasses: Record<ButtonVariant, string> = {
-  primary:
-    'bg-black text-white hover:bg-neutral-800 active:bg-neutral-900',
-  secondary:
-    'bg-pink-500 text-white hover:bg-pink-600 active:bg-pink-700',
-  outline:
-    'border border-black bg-white text-black hover:bg-neutral-100',
-  danger:
-    'bg-red-500 text-white hover:bg-red-600 active:bg-red-700',
-};
 
 const Button = ({
   children,
-  variant = 'primary',
-  fullWidth = false,
   className,
-  disabled,
+  fullWidth = false,
+  variant = 'primary',
+  size = 'md',
   ...props
 }: ButtonProps) => {
   return (
     <button
-      className={cn(
-        'inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60',
-        variantClasses[variant],
+      className={clsx(
+        'inline-flex items-center justify-center rounded-2xl font-medium transition disabled:cursor-not-allowed disabled:opacity-60',
         fullWidth && 'w-full',
+
+        size === 'sm' && 'px-4 py-2 text-sm',
+        size === 'md' && 'px-5 py-3 text-sm',
+        size === 'lg' && 'px-6 py-4 text-base',
+
+        variant === 'primary' && 'bg-black text-white hover:bg-neutral-800',
+        variant === 'secondary' &&
+          'border border-neutral-200 bg-white text-neutral-900 hover:border-neutral-400',
+        variant === 'outline' &&
+          'border border-black bg-transparent text-black hover:bg-black hover:text-white',
+        variant === 'danger' &&
+          'bg-red-600 text-white hover:bg-red-700',
+
         className
       )}
-      disabled={disabled}
       {...props}
     >
       {children}
