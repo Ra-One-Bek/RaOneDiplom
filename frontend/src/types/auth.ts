@@ -1,16 +1,32 @@
 export type UserRole = 'user' | 'admin';
 
-export type AvatarGender = 'female' | 'male' | 'neutral';
-export type AvatarBodyType = 'slim' | 'regular' | 'curvy';
-export type AvatarHairStyle = 'short' | 'bob' | 'long';
+export type AvatarGender = 'male' | 'female';
+export type AvatarBuild = 'slim' | 'medium' | 'full';
+export type AvatarMuscle = 'min' | 'mid' | 'max';
+export type AvatarHeightPreset = 'short' | 'medium' | 'tall';
 export type AvatarSkinTone = 'light' | 'medium' | 'dark';
 
 export interface AvatarProfile {
   gender: AvatarGender;
-  bodyType: AvatarBodyType;
-  hairStyle: AvatarHairStyle;
+  build: AvatarBuild;
+  muscle: AvatarMuscle;
+  heightPreset: AvatarHeightPreset;
   skinTone: AvatarSkinTone;
-  hairColor: string;
+
+  // Расширенные реальные morph-параметры текущего male-export
+  morphAsianMaleYoung: number;
+  morphCaucasianMaleYoung: number;
+  morphAfricanMaleYoung: number;
+
+  morphMaleMaxMuscleAvgWeight: number;
+  morphMaleMaxMuscleAvgWeightMaxHeight: number;
+  morphMaleMaxMuscleMaxWeight: number;
+  morphMaleMaxMuscleMaxWeightMaxHeight: number;
+  morphMaleAvgMuscleAvgWeight: number;
+
+  morphMaleMaxMuscleAvgWeightIdealProportions: number;
+  morphMaleMaxMuscleMaxWeightIdealProportions: number;
+  morphMaleAvgMuscleAvgWeightIdealProportions: number;
 }
 
 export interface AuthUser {

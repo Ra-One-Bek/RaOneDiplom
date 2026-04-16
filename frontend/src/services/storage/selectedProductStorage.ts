@@ -36,22 +36,19 @@ const addToWardrobe = (product: Product) => {
   const exists = wardrobe.some((item) => item.id === product.id);
 
   if (!exists) {
-    const nextWardrobe = [...wardrobe, product];
-    setWardrobe(nextWardrobe);
+    setWardrobe([...wardrobe, product]);
   }
 };
 
-const removeFromWardrobe = (productId: string) => {
-  const wardrobe = getWardrobe().filter(
-    (item) => String(item.id) !== String(productId)
-  );
-  setWardrobe(wardrobe);
+const removeFromWardrobe = (productId: number) => {
+  const nextWardrobe = getWardrobe().filter((item) => item.id !== productId);
+  setWardrobe(nextWardrobe);
 
   const currentOutfit = getOutfit();
   const nextOutfit: FittingOutfit = { ...currentOutfit };
 
   (Object.keys(nextOutfit) as AvatarWearSlot[]).forEach((slot) => {
-    if (String(nextOutfit[slot]?.id) === String(productId)) {
+    if (nextOutfit[slot]?.id === productId) {
       delete nextOutfit[slot];
     }
   });
@@ -60,21 +57,19 @@ const removeFromWardrobe = (productId: string) => {
 };
 
 const wearProduct = (product: Product) => {
-  if (!product.avatarSlot) return;
-
-  const currentOutfit = getOutfit();
+  const slot = product.avatarSlot;
   const nextOutfit: FittingOutfit = {
-    ...currentOutfit,
-    [product.avatarSlot]: product,
+    ...getOutfit(),
+    [slot]: product,
   };
 
-  if (product.avatarSlot === 'dress') {
+  if (slot === 'dress') {
     delete nextOutfit.top;
     delete nextOutfit.bottom;
     delete nextOutfit.outerwear;
   }
 
-  if (product.avatarSlot === 'top' || product.avatarSlot === 'bottom') {
+  if (slot === 'top' || slot === 'bottom' || slot === 'outerwear') {
     delete nextOutfit.dress;
   }
 
@@ -82,8 +77,7 @@ const wearProduct = (product: Product) => {
 };
 
 const unwearSlot = (slot: AvatarWearSlot) => {
-  const currentOutfit = getOutfit();
-  const nextOutfit = { ...currentOutfit };
+  const nextOutfit = { ...getOutfit() };
   delete nextOutfit[slot];
   setOutfit(nextOutfit);
 };
@@ -102,7 +96,6 @@ export const selectedProductStorage = {
   addToWardrobe,
   removeFromWardrobe,
   clearWardrobe,
-
   getOutfit,
   setOutfit,
   wearProduct,

@@ -1,60 +1,74 @@
+import { Link, useNavigate } from 'react-router-dom';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
 import PageContainer from '../../components/layout/PageContainer';
-import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { useAuth } from '../../hooks/useAuth';
-import { Link } from 'react-router-dom';
 import { ROUTES } from '../../constants/routes';
 
 const ProfilePage = () => {
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate(ROUTES.HOME);
+  };
 
   return (
     <>
       <Header />
 
-      <main className="min-h-screen bg-white py-16">
+      <main className="min-h-screen bg-neutral-100 py-12">
         <PageContainer>
-          <h1 className="mb-6 text-4xl font-bold text-neutral-900">
-            Личный кабинет
-          </h1>
-
-          <div className="max-w-3xl rounded-3xl border border-neutral-200 p-8">
-            <div className="mb-6 flex flex-wrap items-center gap-3">
-              <Badge>{user?.role === 'admin' ? 'Администратор' : 'Пользователь'}</Badge>
-              <Badge>{user?.avatarConfigured ? 'Аватар настроен' : 'Аватар не настроен'}</Badge>
+          <div className="mx-auto max-w-3xl rounded-3xl bg-white p-8 shadow-sm">
+            <div className="mb-8">
+              <h1 className="text-3xl font-semibold text-neutral-900">Профиль</h1>
+              <p className="mt-3 text-sm leading-6 text-neutral-600">
+                Управляйте аккаунтом и настройками виртуальной примерочной.
+              </p>
             </div>
 
-            <div className="mb-6 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl bg-neutral-50 p-4">
-                <p className="mb-2 text-sm text-neutral-500">Имя</p>
-                <p className="font-semibold text-neutral-900">{user?.name}</p>
-              </div>
-
-              <div className="rounded-2xl bg-neutral-50 p-4">
-                <p className="mb-2 text-sm text-neutral-500">Email</p>
-                <p className="font-semibold text-neutral-900">{user?.email}</p>
-              </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <InfoCard label="Имя" value={user?.name ?? '—'} />
+              <InfoCard label="Email" value={user?.email ?? '—'} />
+              <InfoCard label="Роль" value={user?.role ?? '—'} />
+              <InfoCard
+                label="Аватар"
+                value={user?.avatarConfigured ? 'Настроен' : 'Не настроен'}
+              />
             </div>
 
-            <Link to={ROUTES.AVATAR_SETUP}>
-              <Button variant="secondary">
-                {user?.avatarConfigured ? 'Изменить аватар' : 'Создать аватар'}
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link to={ROUTES.AVATAR_SETUP}>
+                <Button variant="secondary">
+                  {user?.avatarConfigured ? 'Изменить аватар' : 'Создать аватар'}
+                </Button>
+              </Link>
+
+              <Link to={ROUTES.FITTING_ROOM}>
+                <Button>Открыть примерочную</Button>
+              </Link>
+
+              <Button variant="danger" onClick={handleLogout}>
+                Выйти
               </Button>
-            </Link>
-
-            
-
-            <Button variant="danger" onClick={logout}>
-              Выйти из аккаунта
-            </Button>
+            </div>
           </div>
         </PageContainer>
       </main>
 
       <Footer />
     </>
+  );
+};
+
+const InfoCard = ({ label, value }: { label: string; value: string }) => {
+  return (
+    <div className="rounded-2xl border border-neutral-200 p-4">
+      <p className="text-xs uppercase tracking-wide text-neutral-500">{label}</p>
+      <p className="mt-2 text-base font-medium text-neutral-900">{value}</p>
+    </div>
   );
 };
 

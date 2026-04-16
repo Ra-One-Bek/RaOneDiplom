@@ -20,22 +20,10 @@ import ProtectedRoute from '../../features/auth/ProtectedRoute';
 import AdminRoute from '../../features/auth/AdminRoute';
 
 export const router = createBrowserRouter([
-  {
-    path: ROUTES.HOME,
-    element: <HomePage />,
-  },
-  {
-    path: ROUTES.CATALOG,
-    element: <CatalogPage />,
-  },
-  {
-    path: ROUTES.ABOUT,
-    element: <AboutPage />,
-  },
-  {
-    path: ROUTES.PRODUCT,
-    element: <ProductPage />,
-  },
+  { path: ROUTES.HOME, element: <HomePage /> },
+  { path: ROUTES.CATALOG, element: <CatalogPage /> },
+  { path: ROUTES.ABOUT, element: <AboutPage /> },
+  { path: ROUTES.PRODUCT, element: <ProductPage /> },
   {
     path: ROUTES.FITTING_ROOM,
     element: (
@@ -52,14 +40,8 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
-  {
-    path: ROUTES.LOGIN,
-    element: <LoginPage />,
-  },
-  {
-    path: ROUTES.REGISTER,
-    element: <RegisterPage />,
-  },
+  { path: ROUTES.LOGIN, element: <LoginPage /> },
+  { path: ROUTES.REGISTER, element: <RegisterPage /> },
   {
     path: ROUTES.AVATAR_SETUP,
     element: (
@@ -92,12 +74,6 @@ export const router = createBrowserRouter([
       </AdminRoute>
     ),
   },
-  {
-    path: ROUTES.UNAUTHORIZED,
-    element: <UnauthorizedPage />,
-  },
-  {
-    path: '*',
-    element: <NotFoundPage />,
-  },
+  { path: ROUTES.UNAUTHORIZED, element: <UnauthorizedPage /> },
+  { path: '*', element: <NotFoundPage /> },
 ]);

@@ -1,20 +1,24 @@
-export type ProductCategory =
+export type ProductCategory = 'male' | 'female';
+
+export type ProductType =
+  | 'tshirt'
+  | 'shirt'
+  | 'jacket'
+  | 'pants'
+  | 'skirt'
   | 'dress'
-  | 'top'
-  | 'bottom'
-  | 'outerwear'
-  | 'footwear'
-  | 'accessory';
+  | 'shoes'
+  | 'sneakers';
 
 export type AvatarWearSlot =
-  | 'dress'
   | 'top'
   | 'bottom'
   | 'outerwear'
+  | 'dress'
   | 'footwear';
 
 export interface Product {
-  id: string | number;
+  id: number;
   title: string;
   description: string;
   price: number;
@@ -22,16 +26,13 @@ export interface Product {
   image: string;
 
   category: ProductCategory;
-  avatarSlot: AvatarWearSlot | null;
+  type: ProductType;
+  avatarSlot: AvatarWearSlot;
 
   sizes: string[];
   colors: string[];
+  rating: number;
 
-  brand?: string;
-  material?: string;
-  rating?: number;
-
-  isFeatured?: boolean;
   isNew?: boolean;
   isPopular?: boolean;
 }

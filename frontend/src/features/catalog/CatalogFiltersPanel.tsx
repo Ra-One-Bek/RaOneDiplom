@@ -9,14 +9,16 @@ interface Props {
 
 const CatalogFiltersPanel = ({ filters, onChange }: Props) => {
   return (
-    <div className="grid gap-4 rounded-3xl border border-neutral-200 bg-white p-6 md:grid-cols-4">
+    <div className="grid gap-4 rounded-3xl bg-white p-5 shadow-sm lg:grid-cols-4">
       <Input
-        placeholder="Поиск..."
+        label="Поиск"
+        placeholder="Например, платье или кроссовки"
         value={filters.search}
         onChange={(e) => onChange({ ...filters, search: e.target.value })}
       />
 
       <Select
+        label="Категория"
         value={filters.category}
         onChange={(e) =>
           onChange({
@@ -32,6 +34,7 @@ const CatalogFiltersPanel = ({ filters, onChange }: Props) => {
       />
 
       <Select
+        label="Тип"
         value={filters.type}
         onChange={(e) =>
           onChange({
@@ -42,15 +45,18 @@ const CatalogFiltersPanel = ({ filters, onChange }: Props) => {
         options={[
           { label: 'Все типы', value: 'all' },
           { label: 'Футболки', value: 'tshirt' },
+          { label: 'Рубашки', value: 'shirt' },
           { label: 'Куртки', value: 'jacket' },
           { label: 'Брюки', value: 'pants' },
+          { label: 'Юбки', value: 'skirt' },
           { label: 'Платья', value: 'dress' },
-          { label: 'Обувь', value: 'shoes' },
+          { label: 'Туфли', value: 'shoes' },
           { label: 'Кроссовки', value: 'sneakers' },
         ]}
       />
 
       <Select
+        label="Сортировка"
         value={filters.sort}
         onChange={(e) =>
           onChange({

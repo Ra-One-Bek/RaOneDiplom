@@ -4,7 +4,7 @@ import Footer from '../../components/layout/Footer';
 import PageContainer from '../../components/layout/PageContainer';
 import { mockProducts } from '../../features/catalog/mockProducts';
 import ProductGrid from '../../features/catalog/ProductGrid';
-import CatalogFilters from '../../features/catalog/CatalogFiltersPanel';
+import CatalogFiltersPanel from '../../features/catalog/CatalogFiltersPanel';
 import { applyFilters } from '../../features/catalog/catalog.utils';
 import type { CatalogFilters as Filters } from '../../features/catalog/catalog.types';
 
@@ -24,27 +24,25 @@ const CatalogPage = () => {
     <>
       <Header />
 
-      <main className="min-h-screen bg-neutral-50 py-16">
+      <main className="min-h-screen bg-neutral-100 py-10">
         <PageContainer>
-          <div className="mb-10">
-            <p className="mb-2 text-sm uppercase tracking-[0.2em] text-pink-500">
+          <div className="mb-8">
+            <p className="text-sm uppercase tracking-[0.25em] text-neutral-500">
               Catalog
             </p>
-            <h1 className="text-4xl font-bold text-neutral-900">
+            <h1 className="mt-2 text-4xl font-semibold text-neutral-900">
               Каталог одежды
             </h1>
-            <p className="mt-4 max-w-3xl text-base leading-7 text-neutral-600">
-              Используйте фильтры и поиск для подбора идеального образа.
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-neutral-600">
+              Используйте фильтры и поиск для подбора образа. Быстрое добавление
+              в примерочную работает по кнопке “+” на карточке товара.
             </p>
           </div>
 
-          {/* ФИЛЬТРЫ */}
-          <div className="mb-8">
-            <CatalogFilters filters={filters} onChange={setFilters} />
+          <div className="space-y-6">
+            <CatalogFiltersPanel filters={filters} onChange={setFilters} />
+            <ProductGrid products={filteredProducts} />
           </div>
-
-          {/* РЕЗУЛЬТАТЫ */}
-          <ProductGrid products={filteredProducts} />
         </PageContainer>
       </main>
 

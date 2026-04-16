@@ -1,33 +1,40 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import type { Product } from '../../types/product';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import { formatPrice } from '../../utils/formatPrice';
 import { selectedProductStorage } from '../../services/storage/selectedProductStorage';
-import { ROUTES } from '../../constants/routes';
 
 interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
-  const navigate = useNavigate();
-
-  const handleTryOn = () => {
+  const handleAddToFittingRoom = () => {
     selectedProductStorage.addToWardrobe(product);
-    navigate(ROUTES.FITTING_ROOM);
-    };
+    window.dispatchEvent(new Event('raone-wardrobe-updated'));
+  };
 
   return (
-    <div className="group overflow-hidden rounded-3xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-      <div className="relative h-[240px] overflow-hidden bg-neutral-100">
+    <article className="group relative overflow-hidden rounded-3xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+      <button
+        type="button"
+        onClick={handleAddToFittingRoom}
+        className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black text-xl text-white shadow-md transition hover:scale-105 hover:bg-neutral-800"
+        aria-label={`Добавить ${product.title} в примерочную`}
+        title="Добавить в примерочную"
+      >
+        +
+      </button>
+
+      <div className="relative">
         <img
           src={product.image}
           alt={product.title}
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          className="h-80 w-full object-cover"
         />
 
-        <div className="absolute left-3 top-3 flex gap-2">
+        <div className="absolute left-4 top-4 flex gap-2">
           {product.isNew && <Badge className="bg-pink-500 text-white">New</Badge>}
           {product.isPopular && (
             <Badge className="bg-black text-white">Popular</Badge>
@@ -35,58 +42,58 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </div>
       </div>
 
-      <div className="p-4">
-        <div className="mb-2 flex items-start justify-between gap-3">
-          <h3 className="line-clamp-2 text-base font-semibold text-neutral-900">
+      <div className="space-y-4 p-5">
+        <div>
+          <h3 className="text-lg font-semibold text-neutral-900">
             {product.title}
           </h3>
-          <span className="shrink-0 text-xs font-medium text-amber-500">
-            ★ {product.rating}
-          </span>
+          <p className="mt-1 text-sm text-neutral-500">★ {product.rating}</p>
+          <p className="mt-2 line-clamp-2 text-sm leading-6 text-neutral-600">
+            {product.description}
+          </p>
         </div>
 
-        <p className="mb-3 line-clamp-2 text-sm leading-5 text-neutral-600">
-          {product.description}
-        </p>
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-lg font-bold text-neutral-900">
+              {formatPrice(product.price)}
+            </p>
+            {product.oldPrice && (
+              <p className="text-sm text-neutral-400 line-through">
+                {formatPrice(product.oldPrice)}
+              </p>
+            )}
+          </div>
 
-        <div className="mb-3 flex items-center gap-3">
-          <span className="text-base font-bold text-neutral-900">
-            {formatPrice(product.price)}
-          </span>
-
-          {product.oldPrice && (
-            <span className="text-xs text-neutral-400 line-through">
-              {formatPrice(product.oldPrice)}
-            </span>
-          )}
+          <div className="flex flex-wrap gap-1">
+            {product.sizes.slice(0, 3).map((size) => (
+              <span
+                key={size}
+                className="rounded-full bg-neutral-100 px-2 py-1 text-xs text-neutral-600"
+              >
+                {size}
+              </span>
+            ))}
+          </div>
         </div>
 
-        <div className="mb-4 flex flex-wrap gap-2">
-          {product.sizes.slice(0, 3).map((size) => (
-            <span
-              key={size}
-              className="rounded-full bg-neutral-100 px-2.5 py-1 text-[11px] font-medium text-neutral-700"
-            >
-              {size}
-            </span>
-          ))}
-        </div>
-
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <Link to={`/product/${product.id}`} className="flex-1">
-            <Button fullWidth variant="outline" className="px-3 py-2 text-xs">
+            <Button fullWidth variant="outline">
               Подробнее
             </Button>
           </Link>
 
-          <div className="flex-1">
-            <Button fullWidth onClick={handleTryOn} className="px-3 py-2 text-xs">
-              В примерочную
-            </Button>
-          </div>
+          <button
+            type="button"
+            onClick={handleAddToFittingRoom}
+            className="rounded-2xl bg-black px-4 py-3 text-sm font-medium text-white transition hover:bg-neutral-800"
+          >
+            Добавить
+          </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 };
 

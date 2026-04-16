@@ -1,12 +1,4 @@
-import type { AuthUser, AvatarProfile, LoginPayload, RegisterPayload } from '../../types/auth';
-
-export const DEFAULT_AVATAR_PROFILE: AvatarProfile = {
-  gender: 'neutral',
-  bodyType: 'regular',
-  hairStyle: 'short',
-  skinTone: 'medium',
-  hairColor: '#2f1b14',
-};
+import type { AuthUser, LoginPayload, RegisterPayload } from '../../types/auth';
 
 export const createMockUserFromLogin = (payload: LoginPayload): AuthUser => {
   const isAdmin = payload.email.trim().toLowerCase() === 'admin@raone.com';
@@ -21,7 +13,9 @@ export const createMockUserFromLogin = (payload: LoginPayload): AuthUser => {
   };
 };
 
-export const createMockUserFromRegister = (payload: RegisterPayload): AuthUser => {
+export const createMockUserFromRegister = (
+  payload: RegisterPayload
+): AuthUser => {
   return {
     id: crypto.randomUUID(),
     name: payload.name,

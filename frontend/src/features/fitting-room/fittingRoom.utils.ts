@@ -1,45 +1,24 @@
-import type { FittingSlot, Product } from '../../types/product';
+import type { AvatarWearSlot, Product } from '../../types/product';
 
-export const getProductSlot = (product: Product): FittingSlot => {
+export const getProductSlot = (product: Product): AvatarWearSlot => {
+  if (product.avatarSlot) {
+    return product.avatarSlot;
+  }
+
   switch (product.type) {
-    case 'tshirt':
-    case 'shirt':
-    case 'hoodie':
-      return 'top';
-
-    case 'pants':
-    case 'jeans':
-    case 'skirt':
-      return 'bottom';
-
-    case 'jacket':
-      return 'outerwear';
-
-    case 'sneakers':
-    case 'shoes':
-      return 'footwear';
-
     case 'dress':
       return 'dress';
-
+    case 'jacket':
+      return 'outerwear';
+    case 'pants':
+    case 'skirt':
+      return 'bottom';
+    case 'shoes':
+    case 'sneakers':
+      return 'footwear';
+    case 'tshirt':
+    case 'shirt':
     default:
       return 'top';
-  }
-};
-
-export const getSlotLabel = (slot: FittingSlot) => {
-  switch (slot) {
-    case 'top':
-      return 'Верх';
-    case 'bottom':
-      return 'Низ';
-    case 'outerwear':
-      return 'Верхняя одежда';
-    case 'footwear':
-      return 'Обувь';
-    case 'dress':
-      return 'Платье';
-    default:
-      return slot;
   }
 };

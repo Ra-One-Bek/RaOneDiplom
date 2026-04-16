@@ -1,60 +1,44 @@
-import type { FittingSlot } from '../../types/product';
+import type { Product, AvatarWearSlot } from '../../types/product';
 import type { FittingOutfit } from '../../services/storage/selectedProductStorage';
-import { getSlotLabel } from './fittingRoom.utils';
 
 interface FittingThumbnailRailProps {
   outfit: FittingOutfit;
-  onRemove: (slot: FittingSlot) => void;
+  onRemove?: (slot: AvatarWearSlot) => void;
 }
 
-const railOrder: FittingSlot[] = ['dress', 'top', 'outerwear', 'bottom', 'footwear'];
+const slotLabels: Record<AvatarWearSlot, string> = {
+  top: 'Верх',
+  bottom: 'Низ',
+  outerwear: 'Верхняя одежда',
+  dress: 'Платье',
+  footwear: 'Обувь',
+};
 
-const FittingThumbnailRail = ({
-  outfit,
-  onRemove,
-}: FittingThumbnailRailProps) => {
+const FittingThumbnailRail = ({ outfit, onRemove }: FittingThumbnailRailProps) => {
   return (
-    <div className="flex w-[112px] flex-col gap-3">
-      {railOrder.map((slot) => {
-        const product = outfit[slot];
+    <div className="space-y-3">
+      {(Object.keys(slotLabels) as AvatarWearSlot[]).map((slot) => {
+        const item: Product | undefined = outfit[slot];
 
         return (
-          <div
-            key={slot}
-            className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm"
-          >
-            <div className="flex h-[112px] items-center justify-center bg-neutral-100">
-              {product ? (
-                <img
-                  src={product.image}
-                  alt={product.title}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span className="px-2 text-center text-[11px] text-neutral-400">
-                  {getSlotLabel(slot)}
-                </span>
-              )}
+          <div key={slot} className="rounded-2xl border border-neutral-200 p-3">
+            <div className="text-xs uppercase tracking-wide text-neutral-500">
+              {slotLabels[slot]}
             </div>
 
-            <div className="border-t border-neutral-200 px-2 py-2">
-              <p className="truncate text-[11px] font-semibold text-neutral-800">
-                {getSlotLabel(slot)}
-              </p>
-
-              <p className="truncate text-[10px] text-neutral-500">
-                {product ? product.title : 'Не выбрано'}
-              </p>
-
-              {product && (
-                <button
-                  onClick={() => onRemove(slot)}
-                  className="mt-2 w-full rounded-lg bg-red-50 px-2 py-1 text-[10px] font-medium text-red-600 transition hover:bg-red-100"
-                >
-                  Убрать
-                </button>
-              )}
+            <div className="mt-1 text-sm font-medium text-neutral-900">
+              {item ? item.title : 'Пусто'}
             </div>
+
+            {item && onRemove && (
+              <button
+                type="button"
+                onClick={() => onRemove(slot)}
+                className="mt-2 text-xs text-neutral-600 underline underline-offset-2"
+              >
+                Снять
+              </button>
+            )}
           </div>
         );
       })}

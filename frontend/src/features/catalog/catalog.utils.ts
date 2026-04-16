@@ -7,24 +7,20 @@ export const applyFilters = (
 ): Product[] => {
   let result = [...products];
 
-  // поиск
   if (filters.search) {
     result = result.filter((p) =>
       p.title.toLowerCase().includes(filters.search.toLowerCase())
     );
   }
 
-  // категория
   if (filters.category !== 'all') {
     result = result.filter((p) => p.category === filters.category);
   }
 
-  // тип
   if (filters.type !== 'all') {
     result = result.filter((p) => p.type === filters.type);
   }
 
-  // сортировка
   switch (filters.sort) {
     case 'price-asc':
       result.sort((a, b) => a.price - b.price);
@@ -33,7 +29,7 @@ export const applyFilters = (
       result.sort((a, b) => b.price - a.price);
       break;
     case 'newest':
-      result = result.filter((p) => p.isNew);
+      result = result.sort((a, b) => Number(Boolean(b.isNew)) - Number(Boolean(a.isNew)));
       break;
     case 'popular':
     default:

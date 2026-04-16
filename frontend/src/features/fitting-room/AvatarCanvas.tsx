@@ -1,6 +1,18 @@
 import { Canvas } from '@react-three/fiber';
-import { Environment, OrbitControls } from '@react-three/drei';
-import { useMemo } from 'react';
+import { Environment, OrbitControls, useGLTF } from '@react-three/drei';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  Box3,
+  Group,
+  Material,
+  Mesh,
+  MeshStandardMaterial,
+  Object3D,
+  SkinnedMesh,
+  Vector3,
+} from 'three';
+import { SkeletonUtils } from 'three-stdlib';
+
 import type { AvatarProfile } from '../../types/auth';
 import type { FittingOutfit } from '../../services/storage/selectedProductStorage';
 
@@ -9,33 +21,49 @@ interface AvatarCanvasProps {
   outfit?: FittingOutfit;
 }
 
+const MORPH_NAMES = {
+  asianMaleYoung: '$md-$as-$ma-$yn',
+  caucasianMaleYoung: '$md-$ca-$ma-$yn',
+  africanMaleYoung: '$md-$af-$ma-$yn',
+
+  maleMaxMuscleAvgWeight: '$md-universal-$ma-$yn-max$mu-$av$wg',
+  maleMaxMuscleAvgWeightMaxHeight: '$md-$ma-$yn-max$mu-$av$wg-max$hg',
+  maleMaxMuscleMaxWeight: '$md-universal-$ma-$yn-max$mu-max$wg',
+  maleMaxMuscleMaxWeightMaxHeight: '$md-$ma-$yn-max$mu-max$wg-max$hg',
+  maleAvgMuscleAvgWeight: '$md-universal-$ma-$yn-$av$mu-$av$wg',
+
+  maleMaxMuscleAvgWeightIdealProportions: '$md-$ma-$yn-max$mu-$av$wg-$id$pr',
+  maleMaxMuscleMaxWeightIdealProportions: '$md-$ma-$yn-max$mu-max$wg-$id$pr',
+  maleAvgMuscleAvgWeightIdealProportions: '$md-$ma-$yn-$av$mu-$av$wg-$id$pr',
+} as const;
+
 const skinPalette: Record<AvatarProfile['skinTone'], string> = {
-  light: '#f0c7a4',
-  medium: '#d19a72',
-  dark: '#8b5e3c',
+  light: '#f1c7a3',
+  medium: '#cf9871',
+  dark: '#8d5d3f',
 };
 
 const AvatarCanvas = ({ avatarProfile, outfit }: AvatarCanvasProps) => {
   return (
-    <Canvas camera={{ position: [0, 1.5, 4.4], fov: 35 }}>
-      <ambientLight intensity={1.2} />
-      <directionalLight position={[3, 5, 4]} intensity={1.6} />
-      <directionalLight position={[-2, 3, -2]} intensity={0.6} />
+    <Canvas camera={{ position: [0, 1.6, 4.8], fov: 32 }}>
+      <color attach="background" args={['#f7f5f2']} />
+      <ambientLight intensity={1.35} />
+      <directionalLight position={[4.5, 6, 4]} intensity={1.65} />
+      <directionalLight position={[-3, 4, -2]} intensity={0.75} />
 
       <Environment preset="city" />
       <OrbitControls
         enablePan={false}
-        minDistance={3}
-        maxDistance={6}
-        minPolarAngle={Math.PI / 3.2}
-        maxPolarAngle={Math.PI / 2}
+        minDistance={2.8}
+        maxDistance={7}
+        minPolarAngle={Math.PI / 3.5}
+        maxPolarAngle={Math.PI / 1.9}
+        target={[0, 1.2, 0]}
       />
 
-      <color attach="background" args={['#f5f5f5']} />
-
-      <group position={[0, -1.25, 0]}>
+      <group position={[0, -1.2, 0]}>
         <Floor />
-        <AvatarFigure avatarProfile={avatarProfile} outfit={outfit} />
+        <AvatarModel avatarProfile={avatarProfile} outfit={outfit} />
       </group>
     </Canvas>
   );
@@ -43,415 +71,405 @@ const AvatarCanvas = ({ avatarProfile, outfit }: AvatarCanvasProps) => {
 
 const Floor = () => {
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
-      <circleGeometry args={[3.5, 64]} />
-      <meshStandardMaterial color="#e7e5e4" />
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
+      <circleGeometry args={[3.9, 90]} />
+      <meshStandardMaterial color="#ebe6df" roughness={0.94} />
     </mesh>
   );
 };
 
-interface AvatarFigureProps {
+const AvatarModel = ({
+  avatarProfile,
+  outfit,
+}: {
   avatarProfile?: AvatarProfile | null;
   outfit?: FittingOutfit;
-}
-
-const AvatarFigure = ({ avatarProfile, outfit }: AvatarFigureProps) => {
+}) => {
   const profile = avatarProfile ?? {
-    gender: 'neutral',
-    bodyType: 'regular',
-    hairStyle: 'short',
+    gender: 'male',
+    build: 'medium',
+    muscle: 'mid',
+    heightPreset: 'medium',
     skinTone: 'medium',
-    hairColor: '#2f1b14',
+
+    morphAsianMaleYoung: 0,
+    morphCaucasianMaleYoung: 0,
+    morphAfricanMaleYoung: 0,
+    morphMaleMaxMuscleAvgWeight: 0,
+    morphMaleMaxMuscleAvgWeightMaxHeight: 0,
+    morphMaleMaxMuscleMaxWeight: 0,
+    morphMaleMaxMuscleMaxWeightMaxHeight: 0,
+    morphMaleAvgMuscleAvgWeight: 0,
+    morphMaleMaxMuscleAvgWeightIdealProportions: 0,
+    morphMaleMaxMuscleMaxWeightIdealProportions: 0,
+    morphMaleAvgMuscleAvgWeightIdealProportions: 0,
   };
 
-  const body = useMemo(() => {
-    switch (profile.bodyType) {
-      case 'slim':
-        return {
-          shoulderWidth: 0.82,
-          torsoWidth: 0.62,
-          waistWidth: 0.5,
-          hipWidth: 0.66,
-          legWidth: 0.18,
-          armWidth: 0.12,
-        };
-      case 'curvy':
-        return {
-          shoulderWidth: 0.9,
-          torsoWidth: 0.74,
-          waistWidth: 0.58,
-          hipWidth: 0.82,
-          legWidth: 0.23,
-          armWidth: 0.14,
-        };
-      default:
-        return {
-          shoulderWidth: 0.86,
-          torsoWidth: 0.68,
-          waistWidth: 0.54,
-          hipWidth: 0.72,
-          legWidth: 0.2,
-          armWidth: 0.13,
-        };
-    }
-  }, [profile.bodyType]);
+  const { scene } = useGLTF('/models/avatar.glb');
+  const clonedScene = useMemo(() => SkeletonUtils.clone(scene), [scene]);
 
-  const skinColor = skinPalette[profile.skinTone];
+  const avatarRootRef = useRef<Group>(null);
+  const modelRef = useRef<Group>(null);
 
-  const topColor = getClothingColor(outfit?.top?.colors, '#111827');
-  const bottomColor = getClothingColor(outfit?.bottom?.colors, '#374151');
-  const outerwearColor = getClothingColor(outfit?.outerwear?.colors, '#7c3aed');
-  const footwearColor = getClothingColor(outfit?.footwear?.colors, '#1f2937');
+  const [fit, setFit] = useState({
+    scale: 1,
+    position: [0, 0, 0] as [number, number, number],
+  });
+
+  useLayoutEffect(() => {
+    if (!modelRef.current) return;
+
+    const box = new Box3().setFromObject(modelRef.current);
+    const size = new Vector3();
+    const center = new Vector3();
+
+    box.getSize(size);
+    box.getCenter(center);
+
+    if (size.y <= 0 || !isFinite(size.y)) return;
+
+    const targetHeight = 3.3;
+    const scale = targetHeight / size.y;
+
+    setFit({
+      scale,
+      position: [
+        -center.x * scale,
+        -box.min.y * scale,
+        -center.z * scale,
+      ],
+    });
+  }, [clonedScene]);
+
+  useEffect(() => {
+    if (!avatarRootRef.current) return;
+
+    const meshesWithMorphs: Array<Mesh | SkinnedMesh> = [];
+    const allMeshes: Array<Mesh | SkinnedMesh> = [];
+
+    avatarRootRef.current.traverse((child: Object3D) => {
+      if (child instanceof Mesh || child instanceof SkinnedMesh) {
+        allMeshes.push(child);
+
+        if (
+          child.morphTargetDictionary &&
+          child.morphTargetInfluences &&
+          Object.keys(child.morphTargetDictionary).length > 0
+        ) {
+          meshesWithMorphs.push(child);
+        }
+      }
+    });
+
+    allMeshes.forEach((mesh) => {
+      if (!Array.isArray(mesh.material)) {
+        const nextMaterial = cloneAsStandardMaterial(mesh.material);
+        nextMaterial.color.set(skinPalette[profile.skinTone]);
+        nextMaterial.roughness = 0.9;
+        nextMaterial.metalness = 0.02;
+        mesh.material = nextMaterial;
+      }
+
+      // волосы и похожие части отключаем
+      const meshName = mesh.name.toLowerCase();
+      const shouldHide =
+        meshName.includes('hair') ||
+        meshName.includes('brow') ||
+        meshName.includes('lash') ||
+        meshName.includes('beard');
+
+      if (shouldHide) {
+        mesh.visible = false;
+      }
+    });
+
+    const morphMap: Record<string, number> = {
+      [MORPH_NAMES.asianMaleYoung]: profile.morphAsianMaleYoung,
+      [MORPH_NAMES.caucasianMaleYoung]: profile.morphCaucasianMaleYoung,
+      [MORPH_NAMES.africanMaleYoung]: profile.morphAfricanMaleYoung,
+
+      [MORPH_NAMES.maleMaxMuscleAvgWeight]:
+        profile.morphMaleMaxMuscleAvgWeight,
+      [MORPH_NAMES.maleMaxMuscleAvgWeightMaxHeight]:
+        profile.morphMaleMaxMuscleAvgWeightMaxHeight,
+      [MORPH_NAMES.maleMaxMuscleMaxWeight]:
+        profile.morphMaleMaxMuscleMaxWeight,
+      [MORPH_NAMES.maleMaxMuscleMaxWeightMaxHeight]:
+        profile.morphMaleMaxMuscleMaxWeightMaxHeight,
+      [MORPH_NAMES.maleAvgMuscleAvgWeight]:
+        profile.morphMaleAvgMuscleAvgWeight,
+
+      [MORPH_NAMES.maleMaxMuscleAvgWeightIdealProportions]:
+        profile.morphMaleMaxMuscleAvgWeightIdealProportions,
+      [MORPH_NAMES.maleMaxMuscleMaxWeightIdealProportions]:
+        profile.morphMaleMaxMuscleMaxWeightIdealProportions,
+      [MORPH_NAMES.maleAvgMuscleAvgWeightIdealProportions]:
+        profile.morphMaleAvgMuscleAvgWeightIdealProportions,
+    };
+
+    meshesWithMorphs.forEach((mesh) => {
+      if (!mesh.morphTargetDictionary || !mesh.morphTargetInfluences) return;
+
+      // Сначала сбрасываем все morph
+      Object.keys(mesh.morphTargetDictionary).forEach((key) => {
+        const index = mesh.morphTargetDictionary![key];
+        mesh.morphTargetInfluences![index] = 0;
+      });
+
+      // Потом применяем наши значения
+      Object.entries(morphMap).forEach(([morphName, value]) => {
+        const index = findMorphIndex(mesh.morphTargetDictionary!, morphName);
+
+        if (index !== undefined) {
+          mesh.morphTargetInfluences![index] = value;
+        }
+      });
+    });
+  }, [
+    clonedScene,
+    profile.skinTone,
+    profile.morphAsianMaleYoung,
+    profile.morphCaucasianMaleYoung,
+    profile.morphAfricanMaleYoung,
+    profile.morphMaleMaxMuscleAvgWeight,
+    profile.morphMaleMaxMuscleAvgWeightMaxHeight,
+    profile.morphMaleMaxMuscleMaxWeight,
+    profile.morphMaleMaxMuscleMaxWeightMaxHeight,
+    profile.morphMaleAvgMuscleAvgWeight,
+    profile.morphMaleMaxMuscleAvgWeightIdealProportions,
+    profile.morphMaleMaxMuscleMaxWeightIdealProportions,
+    profile.morphMaleAvgMuscleAvgWeightIdealProportions,
+  ]);
+
+  const topColor = getClothingColor(outfit?.top?.colors, '#1f2937');
+  const bottomColor = getClothingColor(outfit?.bottom?.colors, '#4b5563');
+  const outerwearColor = getClothingColor(outfit?.outerwear?.colors, '#6d28d9');
   const dressColor = getClothingColor(outfit?.dress?.colors, '#db2777');
-
-  const hasDress = Boolean(outfit?.dress);
-  const hasTop = Boolean(outfit?.top);
-  const hasBottom = Boolean(outfit?.bottom);
-  const hasOuterwear = Boolean(outfit?.outerwear);
-  const hasFootwear = Boolean(outfit?.footwear);
+  const footwearColor = getClothingColor(outfit?.footwear?.colors, '#111827');
 
   return (
-    <group>
-      <Head skinColor={skinColor} hairColor={profile.hairColor} hairStyle={profile.hairStyle} />
+    <group ref={avatarRootRef}>
+      <group
+        ref={modelRef}
+        scale={fit.scale}
+        position={fit.position}
+        rotation={[0, Math.PI, 0]}
+      >
+        <primitive object={clonedScene} />
+      </group>
 
-      <Torso
-        skinColor={skinColor}
-        shoulderWidth={body.shoulderWidth}
-        torsoWidth={body.torsoWidth}
-        waistWidth={body.waistWidth}
-      />
-
-      <Arms skinColor={skinColor} armWidth={body.armWidth} shoulderWidth={body.shoulderWidth} />
-      <Legs skinColor={skinColor} legWidth={body.legWidth} hipWidth={body.hipWidth} />
-
-      {hasDress && (
-        <DressLayer color={dressColor} shoulderWidth={body.shoulderWidth} hipWidth={body.hipWidth} />
+      {outfit?.top && <TopOverlay color={topColor} />}
+      {outfit?.bottom && !outfit?.dress && <BottomOverlay color={bottomColor} />}
+      {outfit?.outerwear && !outfit?.dress && (
+        <OuterwearOverlay color={outerwearColor} />
       )}
-
-      {!hasDress && hasTop && (
-        <TopLayer
-          color={topColor}
-          shoulderWidth={body.shoulderWidth}
-          torsoWidth={body.torsoWidth}
-        />
-      )}
-
-      {!hasDress && hasBottom && (
-        <BottomLayer color={bottomColor} hipWidth={body.hipWidth} legWidth={body.legWidth} />
-      )}
-
-      {!hasDress && hasOuterwear && (
-        <OuterwearLayer
-          color={outerwearColor}
-          shoulderWidth={body.shoulderWidth}
-          torsoWidth={body.torsoWidth}
-        />
-      )}
-
-      {hasFootwear && (
-        <FootwearLayer color={footwearColor} legWidth={body.legWidth} />
-      )}
+      {outfit?.dress && <DressOverlay color={dressColor} />}
+      {outfit?.footwear && <FootwearOverlay color={footwearColor} />}
     </group>
   );
 };
 
-const Head = ({
-  skinColor,
-  hairColor,
-  hairStyle,
-}: {
-  skinColor: string;
-  hairColor: string;
-  hairStyle: AvatarProfile['hairStyle'];
-}) => {
-  const hairHeight = hairStyle === 'short' ? 0.12 : hairStyle === 'bob' ? 0.22 : 0.38;
+const cloneAsStandardMaterial = (material: Material) => {
+  const cloned = material.clone();
 
+  if (cloned instanceof MeshStandardMaterial) {
+    return cloned;
+  }
+
+  return new MeshStandardMaterial({
+    color: '#d1a07d',
+    roughness: 0.9,
+    metalness: 0.02,
+  });
+};
+
+const TopOverlay = ({ color }: { color: string }) => {
   return (
-    <group position={[0, 2.1, 0]}>
-      <mesh>
-        <sphereGeometry args={[0.28, 32, 32]} />
-        <meshStandardMaterial color={skinColor} />
+    <group position={[0, 1.13, 0.09]}>
+      <mesh position={[0, 0.38, 0]} scale={[0.88, 0.24, 0.46]}>
+        <sphereGeometry args={[0.53, 32, 32]} />
+        <meshStandardMaterial color={color} roughness={0.92} metalness={0.02} />
       </mesh>
 
-      <mesh position={[0, 0.12, -0.01]} scale={[1.02, 0.75 + hairHeight, 1.02]}>
-        <sphereGeometry args={[0.285, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshStandardMaterial color={hairColor} />
+      <mesh position={[0, 0.0, 0]} scale={[0.68, 0.8, 0.42]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={color} roughness={0.92} metalness={0.02} />
       </mesh>
 
-      {hairStyle === 'bob' && (
-        <>
-          <mesh position={[-0.18, -0.05, 0]}>
-            <boxGeometry args={[0.08, 0.26, 0.14]} />
-            <meshStandardMaterial color={hairColor} />
-          </mesh>
-          <mesh position={[0.18, -0.05, 0]}>
-            <boxGeometry args={[0.08, 0.26, 0.14]} />
-            <meshStandardMaterial color={hairColor} />
-          </mesh>
-        </>
-      )}
+      <mesh position={[-0.55, 0.04, 0]} rotation={[0, 0, 0.18]}>
+        <capsuleGeometry args={[0.12, 0.48, 8, 16]} />
+        <meshStandardMaterial color={color} roughness={0.92} metalness={0.02} />
+      </mesh>
 
-      {hairStyle === 'long' && (
-        <mesh position={[0, -0.28, -0.12]}>
-          <boxGeometry args={[0.34, 0.5, 0.14]} />
-          <meshStandardMaterial color={hairColor} />
+      <mesh position={[0.55, 0.04, 0]} rotation={[0, 0, -0.18]}>
+        <capsuleGeometry args={[0.12, 0.48, 8, 16]} />
+        <meshStandardMaterial color={color} roughness={0.92} metalness={0.02} />
+      </mesh>
+    </group>
+  );
+};
+
+const OuterwearOverlay = ({ color }: { color: string }) => {
+  return (
+    <group position={[0, 1.12, 0.15]}>
+      <mesh position={[0, 0.34, 0]} scale={[0.95, 0.28, 0.56]}>
+        <sphereGeometry args={[0.56, 32, 32]} />
+        <meshStandardMaterial color={color} roughness={0.96} metalness={0.01} />
+      </mesh>
+
+      <mesh position={[0, -0.06, 0]} scale={[0.8, 0.98, 0.52]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={color} roughness={0.96} metalness={0.01} />
+      </mesh>
+
+      <mesh position={[-0.6, -0.03, 0]} rotation={[0, 0, 0.15]}>
+        <capsuleGeometry args={[0.14, 0.86, 8, 16]} />
+        <meshStandardMaterial color={color} roughness={0.96} metalness={0.01} />
+      </mesh>
+
+      <mesh position={[0.6, -0.03, 0]} rotation={[0, 0, -0.15]}>
+        <capsuleGeometry args={[0.14, 0.86, 8, 16]} />
+        <meshStandardMaterial color={color} roughness={0.96} metalness={0.01} />
+      </mesh>
+    </group>
+  );
+};
+
+const BottomOverlay = ({ color }: { color: string }) => {
+  return (
+    <group position={[0, -0.07, 0.07]}>
+      <mesh position={[0, 0.02, 0]} scale={[0.74, 0.34, 0.46]}>
+        <sphereGeometry args={[0.54, 32, 32]} />
+        <meshStandardMaterial color={color} roughness={0.94} metalness={0.01} />
+      </mesh>
+
+      <mesh position={[-0.16, -0.55, 0]}>
+        <capsuleGeometry args={[0.18, 0.92, 8, 16]} />
+        <meshStandardMaterial color={color} roughness={0.94} metalness={0.01} />
+      </mesh>
+
+      <mesh position={[0.16, -0.55, 0]}>
+        <capsuleGeometry args={[0.18, 0.92, 8, 16]} />
+        <meshStandardMaterial color={color} roughness={0.94} metalness={0.01} />
+      </mesh>
+
+      <mesh position={[-0.16, -1.34, 0.02]}>
+        <capsuleGeometry args={[0.135, 0.78, 8, 16]} />
+        <meshStandardMaterial color={color} roughness={0.94} metalness={0.01} />
+      </mesh>
+
+      <mesh position={[0.16, -1.34, 0.02]}>
+        <capsuleGeometry args={[0.135, 0.78, 8, 16]} />
+        <meshStandardMaterial color={color} roughness={0.94} metalness={0.01} />
+      </mesh>
+    </group>
+  );
+};
+
+const DressOverlay = ({ color }: { color: string }) => {
+  return (
+    <group position={[0, 0.98, 0.12]}>
+      <mesh position={[0, 0.56, 0]} scale={[0.86, 0.3, 0.44]}>
+        <sphereGeometry args={[0.52, 32, 32]} />
+        <meshStandardMaterial color={color} roughness={0.93} metalness={0.01} />
+      </mesh>
+
+      <mesh position={[0, 0.18, 0]} scale={[0.68, 0.6, 0.44]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={color} roughness={0.93} metalness={0.01} />
+      </mesh>
+
+      <mesh position={[0, -1.0, 0]} scale={[0.78, 1.1, 0.7]}>
+        <coneGeometry args={[0.78, 2.3, 42]} />
+        <meshStandardMaterial color={color} roughness={0.93} metalness={0.01} />
+      </mesh>
+    </group>
+  );
+};
+
+const FootwearOverlay = ({ color }: { color: string }) => {
+  return (
+    <group position={[0, -2.36, 0.16]}>
+      <group position={[-0.18, 0, 0]}>
+        <mesh>
+          <boxGeometry args={[0.36, 0.15, 0.7]} />
+          <meshStandardMaterial color={color} roughness={0.82} metalness={0.02} />
         </mesh>
-      )}
+        <mesh position={[0.02, 0.03, 0.18]}>
+          <sphereGeometry args={[0.15, 18, 18]} />
+          <meshStandardMaterial color={color} roughness={0.82} metalness={0.02} />
+        </mesh>
+      </group>
+
+      <group position={[0.18, 0, 0]}>
+        <mesh>
+          <boxGeometry args={[0.36, 0.15, 0.7]} />
+          <meshStandardMaterial color={color} roughness={0.82} metalness={0.02} />
+        </mesh>
+        <mesh position={[0.02, 0.03, 0.18]}>
+          <sphereGeometry args={[0.15, 18, 18]} />
+          <meshStandardMaterial color={color} roughness={0.82} metalness={0.02} />
+        </mesh>
+      </group>
     </group>
   );
 };
 
-const Torso = ({
-  skinColor,
-  shoulderWidth,
-  torsoWidth,
-  waistWidth,
-}: {
-  skinColor: string;
-  shoulderWidth: number;
-  torsoWidth: number;
-  waistWidth: number;
-}) => {
-  return (
-    <group position={[0, 1.25, 0]}>
-      <mesh position={[0, 0.22, 0]} scale={[shoulderWidth, 0.28, 0.34]}>
-        <sphereGeometry args={[0.45, 32, 32]} />
-        <meshStandardMaterial color={skinColor} />
-      </mesh>
+const findMorphIndex = (
+  dictionary: Record<string, number>,
+  targetName: string
+) => {
+  const targetNormalized = targetName.trim().toLowerCase();
 
-      <mesh position={[0, -0.2, 0]} scale={[torsoWidth, 0.7, 0.36]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={skinColor} />
-      </mesh>
-
-      <mesh position={[0, -0.72, 0]} scale={[waistWidth, 0.28, 0.34]}>
-        <sphereGeometry args={[0.46, 32, 32]} />
-        <meshStandardMaterial color={skinColor} />
-      </mesh>
-    </group>
+  const exactKey = Object.keys(dictionary).find(
+    (key) => key.trim().toLowerCase() === targetNormalized
   );
-};
 
-const Arms = ({
-  skinColor,
-  armWidth,
-  shoulderWidth,
-}: {
-  skinColor: string;
-  armWidth: number;
-  shoulderWidth: number;
-}) => {
-  const x = shoulderWidth * 0.53;
+  if (exactKey) {
+    return dictionary[exactKey];
+  }
 
-  return (
-    <group position={[0, 1.48, 0]}>
-      <mesh position={[-x, -0.32, 0]} rotation={[0, 0, 0.14]}>
-        <capsuleGeometry args={[armWidth, 0.85, 10, 20]} />
-        <meshStandardMaterial color={skinColor} />
-      </mesh>
-
-      <mesh position={[x, -0.32, 0]} rotation={[0, 0, -0.14]}>
-        <capsuleGeometry args={[armWidth, 0.85, 10, 20]} />
-        <meshStandardMaterial color={skinColor} />
-      </mesh>
-    </group>
+  const partialKey = Object.keys(dictionary).find((key) =>
+    key.trim().toLowerCase().includes(targetNormalized)
   );
-};
 
-const Legs = ({
-  skinColor,
-  legWidth,
-  hipWidth,
-}: {
-  skinColor: string;
-  legWidth: number;
-  hipWidth: number;
-}) => {
-  const offset = hipWidth * 0.23;
+  if (partialKey) {
+    return dictionary[partialKey];
+  }
 
-  return (
-    <group position={[0, 0.15, 0]}>
-      <mesh position={[-offset, -0.55, 0]}>
-        <capsuleGeometry args={[legWidth, 1.2, 10, 20]} />
-        <meshStandardMaterial color={skinColor} />
-      </mesh>
-
-      <mesh position={[offset, -0.55, 0]}>
-        <capsuleGeometry args={[legWidth, 1.2, 10, 20]} />
-        <meshStandardMaterial color={skinColor} />
-      </mesh>
-    </group>
-  );
-};
-
-const TopLayer = ({
-  color,
-  shoulderWidth,
-  torsoWidth,
-}: {
-  color: string;
-  shoulderWidth: number;
-  torsoWidth: number;
-}) => {
-  return (
-    <group position={[0, 1.24, 0.02]}>
-      <mesh position={[0, 0.14, 0]} scale={[shoulderWidth * 1.02, 0.28, 0.4]}>
-        <sphereGeometry args={[0.47, 32, 32]} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-
-      <mesh position={[0, -0.2, 0]} scale={[torsoWidth * 1.04, 0.7, 0.42]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-    </group>
-  );
-};
-
-const BottomLayer = ({
-  color,
-  hipWidth,
-  legWidth,
-}: {
-  color: string;
-  hipWidth: number;
-  legWidth: number;
-}) => {
-  const offset = hipWidth * 0.23;
-
-  return (
-    <group position={[0, 0.02, 0.02]}>
-      <mesh position={[0, 0, 0]} scale={[hipWidth * 1.02, 0.36, 0.42]}>
-        <sphereGeometry args={[0.48, 32, 32]} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-
-      <mesh position={[-offset, -0.62, 0]}>
-        <capsuleGeometry args={[legWidth * 1.08, 0.82, 10, 20]} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-
-      <mesh position={[offset, -0.62, 0]}>
-        <capsuleGeometry args={[legWidth * 1.08, 0.82, 10, 20]} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-    </group>
-  );
-};
-
-const OuterwearLayer = ({
-  color,
-  shoulderWidth,
-  torsoWidth,
-}: {
-  color: string;
-  shoulderWidth: number;
-  torsoWidth: number;
-}) => {
-  return (
-    <group position={[0, 1.22, 0.08]}>
-      <mesh position={[0, 0.06, 0]} scale={[shoulderWidth * 1.12, 0.34, 0.52]}>
-        <sphereGeometry args={[0.5, 32, 32]} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-
-      <mesh position={[0, -0.22, 0]} scale={[torsoWidth * 1.16, 0.86, 0.5]}>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-    </group>
-  );
-};
-
-const DressLayer = ({
-  color,
-  shoulderWidth,
-  hipWidth,
-}: {
-  color: string;
-  shoulderWidth: number;
-  hipWidth: number;
-}) => {
-  return (
-    <group position={[0, 1.0, 0.05]}>
-      <mesh position={[0, 0.36, 0]} scale={[shoulderWidth * 0.96, 0.38, 0.42]}>
-        <sphereGeometry args={[0.48, 32, 32]} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-
-      <mesh position={[0, -0.18, 0]} scale={[hipWidth * 0.88, 1.2, 0.42]}>
-        <coneGeometry args={[0.6, 1.7, 32]} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-    </group>
-  );
-};
-
-const FootwearLayer = ({
-  color,
-  legWidth,
-}: {
-  color: string;
-  legWidth: number;
-}) => {
-  const offset = legWidth * 1.1;
-
-  return (
-    <group position={[0, -1.18, 0.12]}>
-      <mesh position={[-offset, 0, 0]}>
-        <boxGeometry args={[0.32, 0.14, 0.58]} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-
-      <mesh position={[offset, 0, 0]}>
-        <boxGeometry args={[0.32, 0.14, 0.58]} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-    </group>
-  );
+  return undefined;
 };
 
 const getClothingColor = (colors: string[] | undefined, fallback: string) => {
-  if (!colors || colors.length === 0) {
-    return fallback;
-  }
+  if (!colors?.length) return fallback;
 
-  const normalized = colors[0].trim().toLowerCase();
-
-  switch (normalized) {
+  switch (colors[0].toLowerCase()) {
     case 'black':
-    case 'черный':
-    case 'чёрный':
       return '#111827';
     case 'white':
-    case 'белый':
       return '#f3f4f6';
-    case 'blue':
-    case 'синий':
-      return '#2563eb';
-    case 'red':
-    case 'красный':
-      return '#dc2626';
-    case 'green':
-    case 'зеленый':
-    case 'зелёный':
-      return '#16a34a';
-    case 'pink':
-    case 'розовый':
-      return '#db2777';
     case 'gray':
     case 'grey':
-    case 'серый':
       return '#6b7280';
-    case 'brown':
-    case 'коричневый':
-      return '#7c4a2d';
+    case 'blue':
+      return '#2563eb';
+    case 'navy':
+      return '#1e3a8a';
+    case 'red':
+      return '#dc2626';
+    case 'pink':
+      return '#db2777';
     case 'beige':
-    case 'бежевый':
       return '#c8b38e';
+    case 'nude':
+      return '#d6b89c';
+    case 'brown':
+      return '#7c4a2d';
     default:
       return fallback;
   }
 };
+
+useGLTF.preload('/models/avatar.glb');
 
 export default AvatarCanvas;

@@ -11,14 +11,13 @@ import { selectedProductStorage } from '../../services/storage/selectedProductSt
 import { ROUTES } from '../../constants/routes';
 import { useAuth } from '../../hooks/useAuth';
 
-
 const ProductPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const product = useMemo(() => {
-    return mockProducts.find((p) => p.id === Number(id));
+    return mockProducts.find((p) => String(p.id) === String(id));
   }, [id]);
 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -28,7 +27,7 @@ const ProductPage = () => {
     return (
       <>
         <Header />
-        <main className="min-h-screen flex items-center justify-center">
+        <main className="flex min-h-screen items-center justify-center bg-neutral-100">
           <p className="text-lg text-neutral-600">Товар не найден</p>
         </main>
         <Footer />
@@ -37,20 +36,16 @@ const ProductPage = () => {
   }
 
   const handleAddToFittingRoom = () => {
-    if (!product) return;
-
     selectedProductStorage.addToWardrobe(product);
+    window.dispatchEvent(new Event('raone-wardrobe-updated'));
+  };
 
+  const handleOpenFittingRoom = () => {
     if (!user?.avatarConfigured) {
       navigate(ROUTES.AVATAR_SETUP);
       return;
     }
 
-    navigate(ROUTES.FITTING_ROOM);
-  };
-
-  const handleTryOn = () => {
-    selectedProductStorage.addToWardrobe(product);
     navigate(ROUTES.FITTING_ROOM);
   };
 
@@ -62,13 +57,12 @@ const ProductPage = () => {
         <PageContainer>
           <button
             onClick={() => navigate(-1)}
-            className="mb-6 text-sm text-neutral-500 hover:text-black"
+            className="mb-6 text-sm text-neutral-500 transition hover:text-black"
           >
             ← Назад
           </button>
 
           <div className="grid gap-10 lg:grid-cols-2">
-            {/* IMAGE */}
             <div className="overflow-hidden rounded-3xl bg-neutral-100">
               <img
                 src={product.image}
@@ -77,7 +71,6 @@ const ProductPage = () => {
               />
             </div>
 
-            {/* INFO */}
             <div>
               <div className="mb-4 flex items-center gap-2">
                 {product.isNew && (
@@ -92,9 +85,7 @@ const ProductPage = () => {
                 {product.title}
               </h1>
 
-              <p className="mb-4 text-sm text-amber-500">
-                ★ {product.rating}
-              </p>
+              <p className="mb-4 text-sm text-amber-500">★ {product.rating}</p>
 
               <div className="mb-6 flex items-center gap-4">
                 <span className="text-2xl font-bold text-neutral-900">
@@ -112,18 +103,18 @@ const ProductPage = () => {
                 {product.description}
               </p>
 
-              {/* SIZE */}
               <div className="mb-6">
                 <p className="mb-2 font-medium">Размер</p>
                 <div className="flex flex-wrap gap-2">
                   {product.sizes.map((size) => (
                     <button
                       key={size}
+                      type="button"
                       onClick={() => setSelectedSize(size)}
-                      className={`px-4 py-2 rounded-xl border text-sm ${
+                      className={`rounded-xl border px-4 py-2 text-sm ${
                         selectedSize === size
-                          ? 'bg-black text-white border-black'
-                          : 'bg-white border-neutral-300 hover:border-black'
+                          ? 'border-black bg-black text-white'
+                          : 'border-neutral-300 bg-white hover:border-black'
                       }`}
                     >
                       {size}
@@ -132,18 +123,18 @@ const ProductPage = () => {
                 </div>
               </div>
 
-              {/* COLOR */}
               <div className="mb-8">
                 <p className="mb-2 font-medium">Цвет</p>
                 <div className="flex flex-wrap gap-2">
                   {product.colors.map((color) => (
                     <button
                       key={color}
+                      type="button"
                       onClick={() => setSelectedColor(color)}
-                      className={`px-4 py-2 rounded-xl border text-sm ${
+                      className={`rounded-xl border px-4 py-2 text-sm ${
                         selectedColor === color
-                          ? 'bg-black text-white border-black'
-                          : 'bg-white border-neutral-300 hover:border-black'
+                          ? 'border-black bg-black text-white'
+                          : 'border-neutral-300 bg-white hover:border-black'
                       }`}
                     >
                       {color}
@@ -152,14 +143,17 @@ const ProductPage = () => {
                 </div>
               </div>
 
-              {/* ACTIONS */}
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Button fullWidth onClick={handleTryOn}>
-                  В примерочную
+                <Button fullWidth onClick={handleAddToFittingRoom}>
+                  Добавить в примерочную
                 </Button>
 
-                <Button onClick={handleAddToFittingRoom}>
-                  Добавить в примерочную
+                <Button
+                  fullWidth
+                  variant="secondary"
+                  onClick={handleOpenFittingRoom}
+                >
+                  Открыть примерочную
                 </Button>
 
                 <Button
