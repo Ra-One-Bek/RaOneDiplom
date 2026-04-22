@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber';
-import { Environment, OrbitControls, useGLTF } from '@react-three/drei';
+import { OrbitControls, useGLTF } from '@react-three/drei';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Box3,
@@ -47,11 +47,13 @@ const AvatarCanvas = ({ avatarProfile, outfit }: AvatarCanvasProps) => {
   return (
     <Canvas camera={{ position: [0, 1.6, 4.8], fov: 32 }}>
       <color attach="background" args={['#f7f5f2']} />
+
+      {/* Свет без HDR */}
       <ambientLight intensity={1.35} />
       <directionalLight position={[4.5, 6, 4]} intensity={1.65} />
       <directionalLight position={[-3, 4, -2]} intensity={0.75} />
+      <hemisphereLight args={['#ffffff', '#d9d1c7', 0.7]} />
 
-      <Environment preset="city" />
       <OrbitControls
         enablePan={false}
         minDistance={2.8}
@@ -170,7 +172,6 @@ const AvatarModel = ({
         mesh.material = nextMaterial;
       }
 
-      // волосы и похожие части отключаем
       const meshName = mesh.name.toLowerCase();
       const shouldHide =
         meshName.includes('hair') ||
@@ -210,13 +211,11 @@ const AvatarModel = ({
     meshesWithMorphs.forEach((mesh) => {
       if (!mesh.morphTargetDictionary || !mesh.morphTargetInfluences) return;
 
-      // Сначала сбрасываем все morph
       Object.keys(mesh.morphTargetDictionary).forEach((key) => {
         const index = mesh.morphTargetDictionary![key];
         mesh.morphTargetInfluences![index] = 0;
       });
 
-      // Потом применяем наши значения
       Object.entries(morphMap).forEach(([morphName, value]) => {
         const index = findMorphIndex(mesh.morphTargetDictionary!, morphName);
 

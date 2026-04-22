@@ -285,7 +285,7 @@ const AvatarSetupPage = () => {
                 </p>
               </div>
 
-              <div className="h-[680px] overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-50">
+              <div className="sticky top-40 h-[680px] overflow-hidden rounded-3xl border border-neutral-200 bg-neutral-50">
                 <AvatarCanvas avatarProfile={avatar} />
               </div>
             </section>
